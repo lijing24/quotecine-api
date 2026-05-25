@@ -6,10 +6,10 @@ export declare class MoviesService {
     constructor(prisma: PrismaService, config: ConfigService);
     searchTMDB(query: string): Promise<any>;
     findOne(id: string): Promise<{
+        year: number;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        year: number;
         tmdbId: number | null;
         title: string;
         titleZh: string | null;

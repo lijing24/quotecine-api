@@ -6,18 +6,18 @@ export declare class QuotesController {
     findAll(query: QueryQuoteDto): Promise<{
         items: {
             tags: any[];
+            translations: {
+                content: string;
+                language: string;
+            }[];
             movie: {
-                id: string;
                 year: number;
+                id: string;
                 title: string;
                 titleZh: string;
                 director: string;
                 posterUrl: string;
             };
-            translations: {
-                content: string;
-                language: string;
-            }[];
             id: string;
             status: import(".prisma/client").$Enums.QuoteStatus;
             createdAt: Date;
@@ -38,26 +38,26 @@ export declare class QuotesController {
     }>;
     random(mood?: string): Promise<{
         tags: any[];
-        movie: {
-            id: string;
-            year: number;
-            title: string;
-            titleZh: string;
-            director: string;
-            posterUrl: string;
-        };
         translations: {
             id: string;
             status: import(".prisma/client").$Enums.TranslationStatus;
             createdAt: Date;
             updatedAt: Date;
-            content: string;
             quoteId: string;
-            language: string;
+            content: string;
             translatorId: string | null;
+            language: string;
             authority: import(".prisma/client").$Enums.TranslationAuthority;
             upvoteCount: number;
         }[];
+        movie: {
+            year: number;
+            id: string;
+            title: string;
+            titleZh: string;
+            director: string;
+            posterUrl: string;
+        };
         id: string;
         status: import(".prisma/client").$Enums.QuoteStatus;
         createdAt: Date;
@@ -78,14 +78,6 @@ export declare class QuotesController {
     findOne(id: string): Promise<{
         tags: any[];
         favoriteCount: number;
-        movie: {
-            id: string;
-            year: number;
-            title: string;
-            titleZh: string;
-            director: string;
-            posterUrl: string;
-        };
         translations: ({
             translator: {
                 nickname: string;
@@ -95,13 +87,21 @@ export declare class QuotesController {
             status: import(".prisma/client").$Enums.TranslationStatus;
             createdAt: Date;
             updatedAt: Date;
-            content: string;
             quoteId: string;
-            language: string;
+            content: string;
             translatorId: string | null;
+            language: string;
             authority: import(".prisma/client").$Enums.TranslationAuthority;
             upvoteCount: number;
         })[];
+        movie: {
+            year: number;
+            id: string;
+            title: string;
+            titleZh: string;
+            director: string;
+            posterUrl: string;
+        };
         id: string;
         status: import(".prisma/client").$Enums.QuoteStatus;
         createdAt: Date;
@@ -116,10 +116,10 @@ export declare class QuotesController {
     }>;
     create(dto: CreateQuoteDto, userId: string): Promise<{
         movie: {
+            year: number;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            year: number;
             tmdbId: number | null;
             title: string;
             titleZh: string | null;
@@ -150,10 +150,10 @@ export declare class QuotesController {
         status: import(".prisma/client").$Enums.TranslationStatus;
         createdAt: Date;
         updatedAt: Date;
-        content: string;
         quoteId: string;
-        language: string;
+        content: string;
         translatorId: string | null;
+        language: string;
         authority: import(".prisma/client").$Enums.TranslationAuthority;
         upvoteCount: number;
     }>;

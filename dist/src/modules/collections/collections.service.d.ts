@@ -11,12 +11,12 @@ export declare class CollectionsService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        userId: string;
         description: string | null;
         coverUrl: string | null;
         isDefault: boolean;
         isPublic: boolean;
         slug: string | null;
-        userId: string;
     })[]>;
     addToCollection(userId: string, collectionId: string, quoteId: string): Promise<{
         id: string;
@@ -31,35 +31,35 @@ export declare class CollectionsService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        userId: string;
         description: string | null;
         coverUrl: string | null;
         isDefault: boolean;
         isPublic: boolean;
         slug: string | null;
-        userId: string;
     }>;
     getFavorites(userId: string): Promise<({
         quote: {
-            movie: {
-                id: string;
-                year: number;
-                title: string;
-                titleZh: string;
-                director: string;
-                posterUrl: string;
-            };
             translations: {
                 id: string;
                 status: import(".prisma/client").$Enums.TranslationStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                content: string;
                 quoteId: string;
-                language: string;
+                content: string;
                 translatorId: string | null;
+                language: string;
                 authority: import(".prisma/client").$Enums.TranslationAuthority;
                 upvoteCount: number;
             }[];
+            movie: {
+                year: number;
+                id: string;
+                title: string;
+                titleZh: string;
+                director: string;
+                posterUrl: string;
+            };
             tags: {
                 name: string;
             }[];

@@ -9,9 +9,9 @@ export declare class AuthService {
         accessToken: string;
         refreshToken: string;
         user: {
+            id: string;
             email: string;
             nickname: string;
-            id: string;
             role: import(".prisma/client").$Enums.UserRole;
         };
     }>;
@@ -30,9 +30,9 @@ export declare class AuthService {
         refreshToken: string;
     }>;
     getProfile(userId: string): Promise<{
+        id: string;
         email: string;
         nickname: string;
-        id: string;
         avatar: string;
         role: import(".prisma/client").$Enums.UserRole;
         createdAt: Date;
