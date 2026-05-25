@@ -1,0 +1,239 @@
+// QuoteCine Database Schema
+// PostgreSQL 15+ with Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// User & Auth
+// ==========================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  nickname      String
+  passwordHash  String    @map("password_hash")
+  avatar        String?
+  role          UserRole  @default(USER)
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  // Relations
+  favorites     Favorite[]
+  collections   Collection[]
+  quoteSubmissions Quote[]  @relation("submitted_by")
+  translations  QuoteTranslation[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+// ==========================================
+// Movie & Quote Core
+// ==========================================
+
+model Movie {
+  id          String   @id @default(cuid())
+  tmdbId      Int?     @unique @map("tmdb_id")
+  title       String
+  titleZh     String?  @map("title_zh")
+  director    String
+  year        Int
+  posterUrl   String?  @map("poster_url")
+  backdropUrl String?  @map("backdrop_url")
+  overview    String?
+  genres      String[] // ["Drama", "Romance"]
+  runtime     Int?     // minutes
+  tmdbVoteAvg Float?  @map("tmdb_vote_avg")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  quotes      Quote[]
+
+  @@map("movies")
+}
+
+model Quote {
+  id              String        @id @default(cuid())
+  content         String
+  movieId         String        @map("movie_id")
+  movie           Movie         @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  submitterId     String?       @map("submitter_id")
+  submitter       User?         @relation("submitted_by", fields: [submitterId], references: [id])
+  status          QuoteStatus   @default(APPROVED)
+  favoriteCount   Int           @default(0) @map("favorite_count")
+  viewCount       Int           @default(0) @map("view_count")
+  isPinned        Boolean       @default(false) @map("is_pinned")
+  rejectionReason String?        @map("rejection_reason")
+  approvedAt     DateTime?     @map("approved_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  tags        QuoteTag[]
+  favorites   Favorite[]
+  translations QuoteTranslation[]
+
+  @@map("quotes")
+  @@index([status, createdAt])
+  @@index([movieId])
+}
+
+enum QuoteStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model QuoteTag {
+  id        String @id @default(cuid())
+  name      String @unique
+  slug      String @unique
+  quoteId   String @map("quote_id")
+  quote     Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("quote_tags")
+  @@index([name])
+}
+
+model QuoteTranslation {
+  id          String   @id @default(cuid())
+  quoteId     String   @map("quote_id")
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  translatorId String? @map("translator_id")
+  translator  User?   @relation(fields: [translatorId], references: [id])
+  language    String   // "zh", "ja", "ko", etc.
+  content     String
+  authority   TranslationAuthority @default(USER)
+  status     TranslationStatus @default(PENDING)
+  upvoteCount Int     @default(0) @map("upvote_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([quoteId, language])
+  @@map("quote_translations")
+}
+
+enum TranslationAuthority {
+  OFFICIAL   // 官方/权威翻译
+  P1         // P1运营翻译
+  USER       // 用户贡献翻译
+}
+
+enum TranslationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ==========================================
+// User Collections & Favorites
+// ==========================================
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  coverUrl    String?  @map("cover_url")
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isDefault   Boolean  @default(false) @map("is_default")
+  isPublic    Boolean  @default(true) @map("is_public")
+  slug        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  items       CollectionItem[]
+
+  @@unique([userId, name])
+  @@map("collections")
+}
+
+model CollectionItem {
+  id           String     @id @default(cuid())
+  collectionId  String     @map("collection_id")
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  quoteId      String     @map("quote_id")
+  note         String?    // user's personal note
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@unique([collectionId, quoteId])
+  @@map("collection_items")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quoteId   String   @map("quote_id")
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, quoteId])
+  @@map("favorites")
+}
+
+// ==========================================
+// Mood Tags (for random/daily picks)
+// ==========================================
+
+model MoodTag {
+  id        String   @id @default(cuid())
+  name      String   @unique // "happy", "sad", "confused", "excited"
+  labelZh   String   @map("label_zh") // "开心", "难过", "迷茫", "激动"
+  emoji     String
+  color     String   // hex color
+  quoteId   String   @map("quote_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("mood_tags")
+}
+
+// ==========================================
+// Audit Log
+// ==========================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  action    String   // "QUOTE_APPROVE", "QUOTE_REJECT", "USER_SUSPEND"
+  targetType String  @map("target_type")
+  targetId  String   @map("target_id")
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+  @@index([userId, createdAt])
+  @@index([targetType, targetId])
+}
